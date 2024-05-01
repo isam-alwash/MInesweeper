@@ -1,0 +1,319 @@
+Sure, let's go through each line of code and explain its purpose:
+
+```cpp
+#include <iostream>
+#include<ctime>
+#include<cstring>
+```
+
+These lines include necessary header files for input-output operations (`iostream`), time-related functions (`ctime`), and string manipulation functions (`cstring`).
+
+```cpp
+using namespace std;
+
+#define max_mine 99
+#define max_side 25
+#define max_move 526 // 25*25-99
+```
+
+This line brings the `std` namespace into the current scope. The `#define` statements define constants for the maximum number of mines, the maximum side length of the game board, and the maximum number of possible moves.
+
+```cpp
+int SIDE;
+int MINES;
+```
+
+These are global variables to store the dimensions of the game board (`SIDE`) and the total number of mines (`MINES`).
+
+```cpp
+void clear()
+{
+    cout << "\33[2J\33[1;1H";
+}
+```
+
+This function clears the console screen using ANSI escape sequences.
+
+```cpp
+bool isvalid(int row,int col)
+{
+    return (row>=0)&&(row<SIDE)&&(col>=0)&&(col<SIDE);
+}
+```
+
+This function checks whether a given position (row, col) is within the bounds of the game board.
+
+```cpp
+bool ismine(int row,int col,char board[][max_side])
+{
+    if(board[row][col]=='*')
+        return (true);
+    else
+        return (false);
+}
+```
+
+This function checks if there is a mine at a given position (row, col) on the game board.
+
+```cpp
+void make_move(int *x,int *y)
+{
+    while(true)
+    {
+        cout << "\nEnter your move: [row] [column] -> ";
+        cin >> *x >> *y;
+        if ((*x < SIDE) && (*y < SIDE))
+            return;
+    }
+}
+```
+
+This function prompts the user to enter their move (row and column) and validates the input.
+
+```cpp
+void printboard(char myboard[][max_side])
+{
+    clear();
+    cout << "\n\n\t\t\t    ";
+
+    for(int i=0;i<SIDE;i++)
+    {
+        if (i>9)
+            cout << i/10 << " ";
+        else
+            cout << "  ";
+    }
+    
+    cout << "\n\t\t\t    ";
+
+    for(int i=0;i<SIDE;i++)
+        cout << i%10 << " ";
+
+    cout << "\n\n";
+
+    for(int i=0;i<SIDE;i++)
+    {
+        cout << "\t\t\t    ";
+        for(int j=0;j<SIDE;j++){
+            cout << myboard[i][j] << " ";
+        }
+        cout << " " << i << endl;
+    }
+    return;
+}
+```
+
+This function prints the current state of the game board.
+
+```cpp
+int countadjacent(int row,int col,int mines[][2],char realboard[][max_side])
+{
+    int count=0;
+
+    if(isvalid(row-1,col)==true)
+    {
+        if(ismine(row-1,col,realboard)==true)
+            count++;
+    }
+    // Similar logic for other adjacent cells
+
+    return (count);
+}
+```
+
+This function counts the number of mines adjacent to a given position (row, col) on the game board.
+
+```cpp
+bool playminesuntil(char myboard[][max_side],char realboard[][max_side],int mines[][2],int row,int col,int *moves_left)
+{
+    if(myboard[row][col]!='-')
+        return false;
+
+    int i,j;
+    if(realboard[row][col]=='*')
+    {
+        myboard[row][col]='*';
+        for(i=0;i<MINES;i++)
+            myboard[mines[i][0]][mines[i][1]]='*';
+        
+        printboard(myboard);
+        cout << "\nYou lost!\n";
+        return (true);
+    }
+    // Similar logic for uncovering adjacent cells
+
+    return (false);
+}
+```
+
+This function recursively uncovers adjacent cells until a mine is hit or all non-mine cells are uncovered.
+
+```cpp
+void placemines(int mines[][2],char realboard[][max_side])
+{
+    bool mark[max_side*max_side];
+
+    memset(mark,false,sizeof(mark)); // Error: 'memset' was not declared in this scope
+
+    for(int i=0;i<MINES;)
+    {
+        int random=rand()%(SIDE*SIDE);
+        int x=random/SIDE;
+        int y=random%SIDE;
+
+        if(mark[random]==false) //add mine if not present at position random
+        {
+            mines[i][0]=x;
+            mines[i][1]=y;
+
+            realboard[mines[i][0]][mines[i][1]]='*';
+            mark[random]=true;
+            i++;
+        }
+    }
+}
+```
+
+This function randomly places mines on the game board while ensuring no two mines occupy the same position.
+
+```cpp
+void initialise(char realboard[][max_side],char myboard[][max_side])
+{
+    srand(time(NULL)); //initalising random so that same config doesn't arise
+
+    int i,j;
+    for(i=0;i<SIDE;i++)
+        for(j=0;j<SIDE;j++)
+        {
+            myboard[i][j]=realboard[i][j]='-';
+        }
+        return;
+}
+```
+
+This function initializes the game board with empty cells ('-') for both the player's view and the real board containing mines.
+
+```cpp
+void cheatmines (char realboard[][max_side])
+{
+    cout << "The mines locations are-\n";
+    printboard (realboard);
+    return;
+}
+```
+
+This function prints the positions of all mines on the game board (cheating mode).
+
+```cpp
+void replacemine(int row,int col,char board[][max_side])
+{
+    for(int i=0;i<SIDE;i++)
+    {
+        for(int j=0;j<SIDE;j++)
+        {
+            if(board[i][j]!='*')
+            {
+                board[i][j]='*';
+                board[row][
+
+col]='-';
+                return;
+            }
+        }
+    }
+}
+```
+
+This function replaces a mine if the first move hits a mine, ensuring that the player's first move does not result in an immediate loss.
+
+```cpp
+void play()
+{
+    bool gameover=false;
+
+    char realboard[max_side][max_side],myboard[max_side][max_side];
+
+    int moves_left=SIDE*SIDE-MINES;
+    int x,y;
+    int mines[max_mine][2]; //stores (x,y) of all mines
+
+    initialise(realboard,myboard);
+
+    placemines(mines,realboard);
+
+    //if you want cheat and win 
+    //cheatmines(realboard);
+    int currentmoveindex=0;
+
+    while(gameover==false)
+    {
+        cout<< "Current Status of Board : \n";
+        printboard(myboard);
+        make_move(&x,&y);
+
+        //if first move is mine
+        if(currentmoveindex==0)
+        {
+            if(ismine(x,y,realboard)==true) //first attempt is a mine
+                replacemine(x,y,realboard); //replace the mine at that location
+        }
+
+        currentmoveindex++;
+
+        gameover = playminesuntil(myboard,realboard,mines,x,y,&moves_left);
+
+        if((gameover==false)&&(moves_left==0))
+        {
+            cout << "\nYou won !\n";
+            gameover=true;
+        }
+    }
+}
+```
+
+This is the main game loop where the game logic is implemented. It handles player moves, updates the game board, and checks for win/loss conditions.
+
+```cpp
+void choosedifficulty()
+{
+    clear();
+    cout << "\n\t\t\t\t\t\t\t\tMINESWEEPER";
+    cout << "\n\n\t\t\t\t\t\tCHOOSE DIFFICULTY LEVEL : ";
+    cout << "\n\n\t\t\t\t\t\t0.BEGINNER\n\t\t\t\t\t\t1.INTERMMEDIATE\n\t\t\t\t\t\t2.ADVANCED";
+    cout << "\n\n\t\t\t\t\t\tENTER CHOICE (0-2) : ";
+    int choice;
+    cin >> choice;
+    if(choice==0)
+    {
+        SIDE=9; 
+        MINES=10;
+    }
+    else
+    if(choice==1)
+    {
+        SIDE=16; 
+        MINES=40;
+    }
+    else
+    if(choice==2)
+    {
+        SIDE=24; 
+        MINES=99;
+    }
+    else	
+        exit(0);
+}
+```
+
+This function allows the player to choose the difficulty level of the game by setting the dimensions of the game board and the number of mines accordingly.
+
+```cpp
+int main()
+{
+    choosedifficulty();
+    play();
+    return 0;
+}
+```
+
+This is the entry point of the program. It calls the `choosedifficulty()` function to set up the game and then starts the game loop by calling the `play()` function. Once the game ends, the program terminates.
